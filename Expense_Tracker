@@ -1,0 +1,125 @@
+import csv
+from datetime import datetime
+
+# Global list to store expenses
+expenses = []
+monthly_budget = 1000
+
+# 1. Add an expense
+def add_expense():
+    date = input("Enter the date (YYYY-MM-DD): ")
+    try:
+        datetime.strptime(date, "%Y-%m-%d")  # Validate date format
+    except ValueError:
+        print("Invalid date format. Please try again.")
+        return
+
+    category = input("Enter the category (e.g., Food, Travel): ").strip()
+    try:
+        amount = float(input("Enter the amount spent: "))
+    except ValueError:
+        print("Invalid amount. Please enter a numeric value.")
+        return
+    
+    description = input("Enter a brief description of the expense: ").strip()
+    
+    # Add the expense to the list
+    expense = {
+        'date': date,
+        'category': category,
+        'amount': amount,
+        'description': description
+    }
+    expenses.append(expense)
+    print("Expense added successfully!")
+
+# 2. View expenses
+def view_expenses():
+    if not expenses:
+        print("No expenses recorded yet.")
+        return
+
+    print("\nList of Expenses:")
+    for i, expense in enumerate(expenses, 1):
+        # Validate each entry
+        if not all(key in expense for key in ('date', 'category', 'amount', 'description')):
+            print(f"Skipping incomplete entry at index {i}")
+            continue
+        print(f"{i}. Date: {expense['date']}, Category: {expense['category']}, "
+              f"Amount: {expense['amount']}, Description: {expense['description']}")
+
+# 3. Set and track budget
+def set_monthly_budget():
+    global monthly_budget
+    try:
+        monthly_budget = float(input("Enter your monthly budget: "))
+        print(f"Monthly budget set to {monthly_budget}")
+    except ValueError:
+        print("Invalid budget amount. Please enter a numeric value.")
+
+def track_budget():
+    if monthly_budget == 0:
+        print("Monthly budget not set. Please set a budget first.")
+        return
+
+    total_expenses = sum(expense['amount'] for expense in expenses)
+    remaining_balance = monthly_budget - total_expenses
+
+    if total_expenses > monthly_budget:
+        print(f"Warning! You have exceeded your budget by {abs(remaining_balance):.2f}.")
+    else:
+        print(f"You have {remaining_balance:.2f} left for the month.")
+
+# 4. Save and load expenses
+def save_expenses():
+    with open("expenses.csv", mode="w", newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['date', 'category', 'amount', 'description'])
+        for expense in expenses:
+            writer.writerow([expense['date'], expense['category'], expense['amount'], expense['description']])
+    print("Expenses saved to expenses.csv")
+
+def load_expenses():
+    global expenses
+    try:
+        with open("expenses.csv", mode="r") as file:
+            reader = csv.DictReader(file)
+            expenses = [row for row in reader]
+            for expense in expenses:
+                expense['amount'] = float(expense['amount'])  # Convert amount back to float
+            print("Expenses loaded from expenses.csv")
+    except FileNotFoundError:
+        print("No previous expenses found.")
+
+# 5. Interactive menu
+def display_menu():
+    while True:
+        print("\nExpense Tracker Menu:")
+        print("1. Add expense")
+        print("2. View expenses")
+        print("3. Track budget")
+        print("4. Save expenses")
+        print("5. Exit")
+        choice = input("Choose an option (1-5): ")
+        
+        if choice == '1':
+            add_expense()
+        elif choice == '2':
+            view_expenses()
+        elif choice == '3':
+            if monthly_budget == 0:
+                set_monthly_budget()
+            track_budget()
+        elif choice == '4':
+            save_expenses()
+        elif choice == '5':
+            save_expenses()
+            print("Exiting program.")
+            break
+        else:
+            print("Invalid choice. Please enter a number from 1 to 5.")
+
+# Load expenses when program starts
+load_expenses()
+# Start the interactive menu
+display_menu()
